@@ -30,6 +30,12 @@ def cleanup():
         if os.path.exists(current_file):
             logging.info(f"Deleting {current_file} now...")
             os.remove(current_file)
+    
+    for i in range(len(lookups.correlation_dict)):
+        current_file = lookups.correlation_dict[i][0] + '-corr-' +  lookups.correlation_dict[i][1] + '.png'
+        if os.path.exists(current_file):
+            logging.info(f"Deleting {current_file} now...")
+            os.remove(current_file)
 
 
 def load_input():
