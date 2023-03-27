@@ -152,8 +152,8 @@ def merge_dataframes():
     logging.info(
         f"Merged data frame computed in {time_taken:.4f} seconds; writing merged DF to disk")
 
-    # merged_df.to_excel(constants.merged_file,
-    #                   index=False, sheet_name='Appended')
+    merged_df.to_excel(constants.merged_file,
+                       index=False, sheet_name='Appended')
 
     logging.info(constants.end_line)
 
@@ -171,6 +171,10 @@ def process_a_correlation(col1, col2):
     merged_df = merged_df[pd.notnull(merged_df[col2])]
 
     correlation = merged_df[col1].corr(merged_df[col2])
+
+    plt.figure()
+    merged_df.plot.scatter(x=col1, y=col2)
+    plt.savefig(col1 + '-corr-' + col2 + '.png')
 
     time_taken = time.time() - start_time
 
@@ -202,8 +206,9 @@ def histograms():
     for i in range(len(lookups.histograms_keys)):
         print(f"Now procesing histogram for {lookups.histograms_keys[i]}\n")
 
-        counts = merged_df[lookups.histograms_keys[i]].value_counts()
-        
+        counts = merged_df[lookups.histograms_keys[i]
+                           ].value_counts(normalize=True)
+
         histogram_df = pd.DataFrame(
             {'value': counts.index, 'count': counts.values})
 
