@@ -16,21 +16,37 @@ logging.basicConfig(format='%(asctime)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
 
+def cleanup():
+    if os.path.exists(constants.histogram_file):
+        logging.info(f"Deleting {constants.histogram_file} now...")
+        os.remove(constants.histogram_file)
+
+    if os.path.exists(constants.merged_file):
+        logging.info(f"Deleting {constants.merged_file} now...")
+        os.remove(constants.merged_file)
+
+    for i in range(len(lookups.numeric_stats_keys)):
+        current_file = lookups.numeric_stats_keys[i] + '.png'
+        if os.path.exists(current_file):
+            logging.info(f"Deleting {current_file} now...")
+            os.remove(current_file)
+
+
 def load_input():
     global data
 
     logging.info(
         f"Loading tabs {constants.incident_tabname} and {constants.offender_tabname} from file {constants.file}")
-    
+
     logging.info(">>> This takes about 45 seconds <<<")
-    
+
     start_time = time.time()
 
     # Load Input Excel
     data = pd.read_excel(constants.file, sheet_name=constants.tab_names)
-    
+
     time_taken = time.time() - start_time
-    
+
     logging.info(f"Loaded tabs in {time_taken:.4f} seconds")
     logging.info(constants.end_line)
 
@@ -89,7 +105,7 @@ def merge_dataframes():
     # Race id mapping
     race_lookup_df = pd.DataFrame({'race_id': list(
         lookups.race_lookup_dict.keys()), 'race_desc': list(lookups.race_lookup_dict.values())})
-    
+
     # Ethnicity id mapping
     ethnicity_lookup_df = pd.DataFrame({'ethnicity_id': list(
         lookups.ethnicity_lookup_dict.keys()), 'ethnicity_desc': list(lookups.ethnicity_lookup_dict.values())})
@@ -115,7 +131,7 @@ def merge_dataframes():
                          on='ethnicity_id', how='left')
 
     logging.info('Breaking out incident_date into day and month now')
-    
+
     # Breakout incident_date into day, month and year
 
     merged_df['incident_date'] = pd.to_datetime(merged_df['incident_date'])
@@ -126,12 +142,10 @@ def merge_dataframes():
     merged_df['submission_date'] = pd.to_datetime(merged_df['submission_date'])
 
     # Number of days between incident date and report date
-    merged_df['incident_to_submission_days'] = (merged_df['submission_date'] - merged_df['incident_date']).dt.days
+    merged_df['incident_to_submission_days'] = (
+        merged_df['submission_date'] - merged_df['incident_date']).dt.days
 
     merged_df['age_num'] = merged_df['age_num'].replace('NS', np.nan)
-
-    #merged_df = pd.concat(
-    #    [merged_df, merged_df[['incident_day', 'incident_month', 'incident_year']]], axis=1)
 
     time_taken = time.time() - start_time
 
@@ -176,7 +190,7 @@ def process_correlations():
         print(f"Now processing {key}-{value}")
 
         process_a_correlation(key, value)
-    
+
     logging.info(constants.end_line)
 
 
@@ -189,50 +203,27 @@ def histograms():
         print(f"Now procesing histogram for {lookups.histograms_keys[i]}\n")
 
         counts = merged_df[lookups.histograms_keys[i]].value_counts()
-
-        histogram_df = pd.DataFrame({'value': counts.index, 'count': counts.values})
+        
+        histogram_df = pd.DataFrame(
+            {'value': counts.index, 'count': counts.values})
 
         # Sort the dataframe by the value column
         histogram_df = histogram_df.sort_values(by='value')
 
         if os.path.exists(constants.histogram_file):
             with pd.ExcelWriter(constants.histogram_file, mode='a') as writer:
-                histogram_df.to_excel(writer, sheet_name=lookups.histograms_keys[i], index=False)
+                histogram_df.to_excel(
+                    writer, sheet_name=lookups.histograms_keys[i], index=False)
         else:
-            histogram_df.to_excel(constants.histogram_file, sheet_name=lookups.histograms_keys[i], index=False)
-        
+            histogram_df.to_excel(
+                constants.histogram_file, sheet_name=lookups.histograms_keys[i], index=False)
+
         print(histogram_df)
 
 
-def process_offender_by_race():
-    global data, merged_df
-    
-    ethnicity_counts = merged_df['race_desc'].value_counts()
-
-    print(f"Race counts\n{ethnicity_counts}")
-    
-    logging.info(constants.end_line)
-
-
-def process_offender_by_gender():
-    global data, merged_df
-    ethnicity_counts = merged_df['sex_code'].value_counts()
-    print(f"Sex counts\n{ethnicity_counts}")
-    logging.info(constants.end_line)
-
-
-def process_offender_by_ethnicity():
-    global data, merged_df
-    ethnicity_counts = merged_df['ethnicity_desc'].value_counts()
-    print(f"Ethnicity counts\n{ethnicity_counts}")
-    logging.info(constants.end_line)
-
-
+cleanup()
 load_input()
 merge_dataframes()
 descriptive_stats()
 process_correlations()
 histograms()
-process_offender_by_race()
-process_offender_by_gender()
-process_offender_by_ethnicity()
