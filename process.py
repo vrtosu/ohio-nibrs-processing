@@ -122,11 +122,19 @@ def merge_dataframes():
         'Merging incident and offender dfs using maximum offender_seq_nbr now')
 
     # Extract highest offender_seq_num for each incident_id -> also gives us # perps etc.
+    perp_counts_by_incident = data[constants.offender_tabname]['incident_id'].value_counts()
+
+    histogram_df = pd.DataFrame(
+            {'incident_id': perp_counts_by_incident.index, 'num_perps': perp_counts_by_incident.values})
+    
     max_age_data = data[constants.offender_tabname].loc[data[constants.offender_tabname].groupby(
         'incident_id')['offender_seq_num'].idxmax()]
     merged_df = data[constants.incident_tabname].merge(
         max_age_data, on='incident_id', how='left')
 
+    merged_df = data[constants.incident_tabname].merge(
+        histogram_df, on='incident_id', how='left')
+    
     logging.info('Adding race description now')
 
     merged_df = pd.merge(merged_df, race_lookup_df, on='race_id', how='left')
@@ -237,3 +245,19 @@ merge_dataframes()
 descriptive_stats()
 process_correlations()
 histograms()
+
+counts = data[constants.offender_tabname]['incident_id'].value_counts()
+
+histogram_df = pd.DataFrame(
+            {'incident_id': counts.index, 'num_perps': counts.values})
+
+# Sort the dataframe by the value column
+histogram_df = histogram_df.sort_values(by='value')
+
+if os.path.exists(constants.histogram_file):
+    with pd.ExcelWriter(constants.histogram_file, mode='a') as writer:
+        histogram_df.to_excel(writer, sheet_name='incident_id', index=False)
+else:
+    histogram_df.to_excel(constants.histogram_file, sheet_name='incident_id', index=False)
+
+print(histogram_df)
