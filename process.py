@@ -158,8 +158,7 @@ def merge_dataframes():
     logging.info(
         f"Merged data frame computed in {time_taken:.4f} seconds; writing merged DF to disk")
 
-    merged_df.to_excel(constants.merged_file,
-                       index=False, sheet_name='Appended')
+    merged_df.to_csv(constants.merged_file, index=False)
 
     logging.info(constants.end_line)
 

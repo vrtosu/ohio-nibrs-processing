@@ -12,4 +12,4 @@ numeric_stats_keys = ['age_num', 'age_range_low_num',
                       'age_range_high_num', 'incident_to_submission_days']
 
 histograms_keys = ['incident_hour', 'offender_id', 'incident_day',
-                   'incident_month', 'race_desc', 'sex_code', 'ethnicity_desc']
+                   'incident_month', 'race_desc', 'sex_code', 'ethnicity_desc', 'cleared_except_id', 'report_date_flag', 'cargo_theft_flag']
