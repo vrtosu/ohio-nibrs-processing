@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
@@ -74,8 +75,8 @@ def descriptive_stats():
         f"Total incidents in {constants.incident_tabname}: {data[constants.incident_tabname]['incident_id'].nunique()}")
 
     # Generate numerical stats for fields in lookups.numeric_stats
-    for i in range(len(lookups.numeric_stats)):
-        numeric_stats(lookups.numeric_stats[i])
+    for i in range(len(lookups.numeric_stats_keys)):
+        numeric_stats(lookups.numeric_stats_keys[i])
 
     logging.info(constants.end_line)
 
@@ -129,8 +130,8 @@ def merge_dataframes():
 
     merged_df['age_num'] = merged_df['age_num'].replace('NS', np.nan)
 
-    merged_df = pd.concat(
-        [merged_df, merged_df[['incident_day', 'incident_month', 'incident_year']]], axis=1)
+    #merged_df = pd.concat(
+    #    [merged_df, merged_df[['incident_day', 'incident_month', 'incident_year']]], axis=1)
 
     time_taken = time.time() - start_time
 
@@ -182,19 +183,34 @@ def process_correlations():
 def histograms():
     logging.info('Computing histograms now')
 
-    global data
+    global merged_df
 
-    merged_df['incident_hour'].hist()
+    for i in range(len(lookups.histograms_keys)):
+        print(f"Now procesing histogram for {lookups.histograms_keys[i]}\n")
 
-    plt.show()
+        counts = merged_df[lookups.histograms_keys[i]].value_counts()
 
-    logging.info(constants.end_line)
+        histogram_df = pd.DataFrame({'value': counts.index, 'count': counts.values})
+
+        # Sort the dataframe by the value column
+        histogram_df = histogram_df.sort_values(by='value')
+
+        if os.path.exists(constants.histogram_file):
+            with pd.ExcelWriter(constants.histogram_file, mode='a') as writer:
+                histogram_df.to_excel(writer, sheet_name=lookups.histograms_keys[i], index=False)
+        else:
+            histogram_df.to_excel(constants.histogram_file, sheet_name=lookups.histograms_keys[i], index=False)
+        
+        print(histogram_df)
 
 
 def process_offender_by_race():
     global data, merged_df
+    
     ethnicity_counts = merged_df['race_desc'].value_counts()
+
     print(f"Race counts\n{ethnicity_counts}")
+    
     logging.info(constants.end_line)
 
 
@@ -216,7 +232,7 @@ load_input()
 merge_dataframes()
 descriptive_stats()
 process_correlations()
-# histograms()
+histograms()
 process_offender_by_race()
 process_offender_by_gender()
 process_offender_by_ethnicity()

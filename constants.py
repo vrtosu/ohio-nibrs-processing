@@ -4,3 +4,4 @@ merged_file = 'Merged.xlsx'
 incident_tabname = 'NIBRS_incident'
 offender_tabname = 'NIBRS_offender'
 tab_names = [incident_tabname, offender_tabname]
+histogram_file = 'histograms.xlsx'

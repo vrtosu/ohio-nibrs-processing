@@ -6,4 +6,6 @@ ethnicity_lookup_dict = {20: 'Hispanic or Latino',
 
 correlation_dict = [['incident_hour', 'age_num'], ['incident_hour', 'offender_seq_num']]
 
-numeric_stats = ['age_num', 'age_range_low_num', 'age_range_high_num', 'incident_to_submission_days']
+numeric_stats_keys = ['age_num', 'age_range_low_num', 'age_range_high_num', 'incident_to_submission_days']
+
+histograms_keys = ['incident_hour', 'offender_id', 'incident_day', 'incident_month']
