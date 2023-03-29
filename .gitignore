@@ -162,3 +162,5 @@ cython_debug/
 *.png
 ~$*.xlsx
 .DS_Store
+
+*.csv
